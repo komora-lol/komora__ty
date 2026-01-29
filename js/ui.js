@@ -58,13 +58,14 @@ class UI {
                         <!-- Main Navigation -->
                         ${this.getSidebarItem('dashboard', 'squares-four', 'Dashboard', activePage)}
                         ${this.getSidebarItem('schedule', 'calendar', 'Schedule', activePage)}
-                        ${this.getSidebarItem('documents', 'folder', 'Documents', activePage)}
+                        ${this.getSidebarItem('documents', 'folder', 'Resources', activePage)}
                         ${this.getSidebarItem('notes', 'notebook', 'Notes', activePage)}
                         
                         <!-- Divider -->
                         <div class="sidebar-divider" style="height: 2px; background: var(--border); margin: 0.5rem 0; width: 100%; border-radius: 2px;"></div>
 
                         <!-- System / Preferences -->
+                        ${this.getSidebarItem('tips', 'lightbulb', 'Study Tips', activePage)}
                         ${this.getSidebarItem('settings', 'gear', 'Settings', activePage)}
                         <div class="icon-cell ${activePage === 'profile' ? 'active' : ''}" data-tooltip="Profile" onclick="app.ui.renderProfile()">
                             <div style="width: 24px; height: 24px; border-radius: 50%; background: #ddd; overflow: hidden;">
@@ -78,6 +79,18 @@ class UI {
                     ${content}
                 </section>
             </main>
+
+            <footer class="app-footer">
+                <div class="footer-content">
+                    <p style="font-weight: 600;">Made with ❤️ by StudySpace</p>
+                    <p style="font-size: 0.9rem;">&copy; ${new Date().getFullYear()} All Rights Reserved.</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="ph ph-github-logo"></i></a>
+                        <a href="#" class="social-link"><i class="ph ph-twitter-logo"></i></a>
+                        <a href="#" class="social-link"><i class="ph ph-instagram-logo"></i></a>
+                    </div>
+                </div>
+            </footer>
         `;
 
         this.bindEvents();
@@ -101,9 +114,33 @@ class UI {
 
         const content = `
             <div style="margin-bottom: 2rem;">
-                 <h2 style="margin-bottom: 0.5rem;">Welcome back, ${user.name} 👋</h2>
-                 <p style="color: var(--text-muted);">Ready to focus today?</p>
+                 <h2 style="margin-bottom: 0.5rem; font-size: 2rem; color: var(--text-main);">Welcome back, ${user.name} 👋</h2>
+                 <p style="color: var(--text-muted); font-size: 1.1rem;">Ready to achieve your goals today?</p>
             </div>
+
+            <section class="goals-section">
+                <div class="glass-panel goal-card">
+                    <i class="ph ph-target" style="font-size: 2rem; color: var(--primary);"></i>
+                    <div>
+                        <h4>Set Your Goals</h4>
+                        <p>Define clear objectives to stay focused and motivated.</p>
+                    </div>
+                </div>
+                <div class="glass-panel goal-card">
+                    <i class="ph ph-chart-line-up" style="font-size: 2rem; color: var(--secondary);"></i>
+                    <div>
+                        <h4>Track Progress</h4>
+                        <p>Monitor your improvements and celebrate small wins.</p>
+                    </div>
+                </div>
+                <div class="glass-panel goal-card">
+                    <i class="ph ph-brain" style="font-size: 2rem; color: var(--accent);"></i>
+                    <div>
+                        <h4>Master Skills</h4>
+                        <p>Use active recall and spaced repetition to learn faster.</p>
+                    </div>
+                </div>
+            </section>
             
             <div class="dashboard-widgets-grid">
                 <!-- Left Column -->
@@ -558,7 +595,7 @@ class UI {
         const content = `
              <div class="notes-grid">
                 ${notes.map((note, index) => `
-                    <div class="glass-panel note-card animate-slide-up" onclick="app.ui.openNoteModal(${note.id})" style="background: ${note.color}20; border-left: 4px solid ${note.color}; animation-delay: ${index * 100}ms;">
+                    <div class="glass-panel note-card animate-slide-up" onclick="app.ui.openNoteModal(${note.id})" style="background: ${note.color}20; border-left: 44px solid ${note.color}; animation-delay: ${index * 100}ms;">
                         <h4 style="color: var(--text-main);">${note.title}</h4>
                         <p>${note.content}</p>
                         <div style="text-align: right; margin-top: 1rem; opacity: 0.5;">
@@ -836,35 +873,12 @@ class UI {
 
     renderSettings() {
         const settings = this.store.getSettings();
+        const user = this.store.getUser();
 
         const content = `
+            <h2>Settings</h2>
+            
             <div class="glass-panel" style="padding: 2rem; max-width: 600px;">
-                <div class="settings-section">
-                    <h4 style="margin-bottom: 1rem;">Appearance</h4>
-                    <div class="settings-item">
-                        <span>Theme Mode</span>
-                        <select class="form-select" style="width: auto;" onchange="app.ui.updateSetting('theme', this.value)">
-                            <option value="light" ${settings.theme === 'light' ? 'selected' : ''}>Light</option>
-                            <option value="dark" ${settings.theme === 'dark' ? 'selected' : ''}>Dark</option>
-                        </select>
-                    </div>
-                     <div class="settings-item">
-                        <span>Font Size</span>
-                        <select class="form-select" style="width: auto;" onchange="app.ui.updateSetting('fontSize', this.value)">
-                            <option value="small" ${settings.fontSize === 'small' ? 'selected' : ''}>Small</option>
-                            <option value="medium" ${settings.fontSize === 'medium' ? 'selected' : ''}>Medium</option>
-                            <option value="large" ${settings.fontSize === 'large' ? 'selected' : ''}>Large</option>
-                        </select>
-                    </div>
-                </div>
-                
-                 <div class="settings-section">
-                    <h4 style="margin-bottom: 1rem;">Preferences</h4>
-                     <div class="settings-item">
-                        <span>Dashboard Layout</span>
-                        <select class="form-select" style="width: auto;" onchange="app.ui.updateSetting('dashboardLayout', this.value)">
-                            <option value="normal" ${settings.dashboardLayout === 'normal' ? 'selected' : ''}>Normal</option>
-                            <option value="compact" ${settings.dashboardLayout === 'compact' ? 'selected' : ''}>Compact</option>
                         </select>
                     </div>
                      <div class="settings-item">
@@ -878,6 +892,21 @@ class UI {
                     <div class="settings-item">
                         <span>Animations</span>
                         <div class="toggle-switch ${settings.animations ? 'active' : ''}" onclick="app.ui.updateSetting('animations', !${settings.animations})">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                     <!-- Study Tips Permissions Section -->
+                    <div class="settings-divider" style="height: 1px; background: var(--border); margin: 2rem 0;"></div>
+                    <h3 style="margin-bottom: 1rem;">Study Tips Permissions</h3>
+                    <div class="settings-item">
+                         <span>Show Tips on Dashboard</span>
+                         <div class="toggle-switch active">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+                     <div class="settings-item">
+                         <span>Allow Progress Analysis</span>
+                         <div class="toggle-switch active">
                             <div class="toggle-thumb"></div>
                         </div>
                     </div>
@@ -954,11 +983,37 @@ class UI {
                 </div>
 
                 <h3>Account Settings</h3>
-                <div style="display: grid; gap: 1rem;">
-                    <button class="btn glass-panel" style="justify-content: space-between;">
-                        <span>Edit Profile Info</span>
-                        <i class="ph ph-caret-right"></i>
-                    </button>
+                <div class="glass-panel" style="padding: 2rem; display: grid; gap: 1.5rem;">
+                     <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" class="form-input" value="${user.name}" onchange="app.store.updateUser({name: this.value}); app.ui.renderProfile();">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="color: var(--accent);">Current Grade Level (Dedicated)</label>
+                        <select class="form-select" onchange="app.store.updateUser({grade: this.value}); app.ui.renderProfile();">
+                            <option ${user.grade === '1st Baccalaureate' ? 'selected' : ''}>1st Baccalaureate</option>
+                            <option ${user.grade === '2nd Baccalaureate' ? 'selected' : ''}>2nd Baccalaureate</option>
+                            <option ${user.grade === 'College Year 1' ? 'selected' : ''}>College Year 1</option>
+                        </select>
+                         <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;">
+                            This setting adjusts your curriculum and difficulty. It evolves as you progress.
+                        </p>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" class="form-input" value="student@studyspace.com" disabled style="opacity: 0.7; cursor: not-allowed;">
+                    </div>
+
+                     <div class="form-group">
+                        <label>Bio</label>
+                        <textarea class="form-input" rows="3" placeholder="Tell us about your goals...">Aiming for top honors!</textarea>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <button class="btn btn-primary">Save Changes</button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1198,6 +1253,90 @@ class UI {
         link.click();
         document.body.removeChild(link);
         this.showToast("Download started!", "success");
+    }
+
+    renderTips() {
+        const content = `
+            <div class="animate-slide-up">
+                <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; text-align: center; background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(162, 155, 254, 0.1) 100%);">
+                    <i class="ph ph-lightbulb" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
+                    <h2 style="margin-bottom: 0.5rem;">Master Your Learning</h2>
+                    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Discover scientifically proven techniques to study smarter, not harder.</p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <!-- Tip 1 -->
+                    <div class="glass-panel tip-card" style="border-top: 4px solid #ff7675;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 118, 117, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-timer" style="color: #ff7675; font-size: 1.2rem;"></i>
+                            </div>
+                            <span class="badge" style="background: rgba(255, 118, 117, 0.1); color: #ff7675;">Time Management</span>
+                        </div>
+                        <h3>The Pomodoro Technique</h3>
+                        <p style="color: var(--text-muted); margin: 0.5rem 0 1rem; font-size: 0.95rem;">
+                            Work for 25 minutes, then take a 5 minute break. After 4 cycles, take a longer break. This prevents burnout and keeps your mind fresh.
+                        </p>
+                        <button class="btn-xs" onclick="app.ui.renderDashboard()">Try Timer</button>
+                    </div>
+
+                    <!-- Tip 2 -->
+                    <div class="glass-panel tip-card" style="border-top: 4px solid #74b9ff;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(116, 185, 255, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-brain" style="color: #74b9ff; font-size: 1.2rem;"></i>
+                            </div>
+                            <span class="badge" style="background: rgba(116, 185, 255, 0.1); color: #74b9ff;">Memory</span>
+                        </div>
+                        <h3>Active Recall</h3>
+                        <p style="color: var(--text-muted); margin: 0.5rem 0 1rem; font-size: 0.95rem;">
+                            Don't just re-read. Test yourself. Close the book and try to recite what you learned. This strengthens neural connections.
+                        </p>
+                    </div>
+
+                    <!-- Tip 3 -->
+                    <div class="glass-panel tip-card" style="border-top: 4px solid #55efc4;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(85, 239, 196, 0.1); display: flex; align-items: center; justify-content: center;">
+                                <i class="ph ph-calendar-check" style="color: #55efc4; font-size: 1.2rem;"></i>
+                            </div>
+                            <span class="badge" style="background: rgba(85, 239, 196, 0.1); color: #55efc4;">Retention</span>
+                        </div>
+                        <h3>Spaced Repetition</h3>
+                        <p style="color: var(--text-muted); margin: 0.5rem 0 1rem; font-size: 0.95rem;">
+                            Review material at increasing intervals (1 day, 3 days, 1 week). This combats the "forgetting curve" effectively.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="glass-panel" style="margin-top: 2rem; padding: 1.5rem;">
+                    <h3><i class="ph ph-sliders"></i> Study Tips Settings</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Manage how the study assistant interacts with your learning data.</p>
+                    
+                    <div class="settings-group">
+                         <div class="settings-item">
+                            <span>Personalized Recommendations</span>
+                            <div class="toggle-switch active">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+                        <div class="settings-item">
+                            <span>Daily Tip Notification</span>
+                            <div class="toggle-switch">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+                         <div class="settings-item">
+                            <span>Access to Grade History</span>
+                            <div class="toggle-switch active">
+                                <div class="toggle-thumb"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+         `;
+        this.renderLayout('tips', 'Study Tips', content);
     }
 
     // Enhanced Upload & Toast Logic
