@@ -62,10 +62,10 @@ class Store {
         ];
 
         this.recentFiles = [
-            { name: 'Math_Functions_Summary.pdf', type: 'pdf', date: '2h ago', subject: 'math', category: 'lessons' },
-            { name: 'Physics_Mechanics_Ex1.docx', type: 'doc', date: '5h ago', subject: 'phys', category: 'exercises' },
-            { name: 'English_Vocabulary_List.pdf', type: 'pdf', date: '1d ago', subject: 'eng', category: 'lessons' },
-            { name: 'Math_Calculus_Exam_2024.pdf', type: 'pdf', date: '3d ago', subject: 'math', category: 'exams' }
+            { id: 101, name: 'Math_Functions_Summary.pdf', type: 'pdf', date: '2h ago', subject: 'math', category: 'lessons', isMock: true },
+            { id: 102, name: 'Physics_Mechanics_Ex1.docx', type: 'doc', date: '5h ago', subject: 'phys', category: 'exercises', isMock: true },
+            { id: 103, name: 'English_Vocabulary_List.pdf', type: 'pdf', date: '1d ago', subject: 'eng', category: 'lessons', isMock: true },
+            { id: 104, name: 'Math_Calculus_Exam_2024.pdf', type: 'pdf', date: '3d ago', subject: 'math', category: 'exams', isMock: true }
         ];
 
         this.weeklyProgress = [
@@ -175,6 +175,19 @@ class Store {
             id: Date.now()
         });
         this.save();
+    }
+
+    deleteFile(id) {
+        this.recentFiles = this.recentFiles.filter(f => f.id !== id);
+        this.save();
+    }
+
+    renameFile(id, newName) {
+        const file = this.recentFiles.find(f => f.id === id);
+        if (file) {
+            file.name = newName;
+            this.save();
+        }
     }
 
     getWeeklyProgress() {

@@ -49,6 +49,10 @@ class UI {
                     <button class="btn btn-primary" id="theme-toggle">
                         <i class="ph ph-moon"></i>
                     </button>
+                    <!-- Text Logo -->
+                    <div style="font-family: var(--font-heading); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-left: 1rem;" onclick="app.ui.renderDashboard()">
+                        StudySpace<span style="color: var(--primary);">.</span>
+                    </div>
                 </div>
             </header>
 
@@ -82,7 +86,7 @@ class UI {
 
             <footer class="app-footer">
                 <div class="footer-content">
-                    <p style="font-weight: 600;">Made with ❤️ by StudySpace</p>
+                    <p style="font-weight: 600;">Made Khalil ❤️ Welcome students</p>
                     <p style="font-size: 0.9rem;">&copy; ${new Date().getFullYear()} All Rights Reserved.</p>
                     <div class="social-links">
                         <a href="#" class="social-link"><i class="ph ph-github-logo"></i></a>
@@ -251,7 +255,7 @@ class UI {
                 ${files.length > 0 ? `
                     <div style="display: flex; flex-direction: column; gap: 1rem;">
                         ${files.map(file => `
-                             <div class="file-item" style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; border-radius: 8px; transition: background 0.2s; cursor: pointer;" onclick="app.ui.openUploadModal()">
+                             <div class="file-item" style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; border-radius: 8px; transition: background 0.2s; cursor: pointer;" onclick="app.ui.previewFile(${file.id})">
                                 <div class="file-icon" style="color: var(--primary); font-size: 1.5rem;">
                                     <i class="ph ph-file-${file.type}"></i>
                                 </div>
@@ -712,7 +716,7 @@ class UI {
             filesHtml = `
                 <div class="files-grid">
                     ${files.map(file => `
-                        <div class="glass-panel file-card-grid" style="border-top: 4px solid ${getFileColor(file.subject)}">
+                        <div class="glass-panel file-card-grid" style="border-top: 4px solid ${getFileColor(file.subject)}" onclick="app.ui.previewFile(${file.id})">
                             <div class="file-icon-large">
                                 <i class="ph ph-file-${file.type}"></i>
                             </div>
@@ -720,7 +724,11 @@ class UI {
                                 <h4>${file.name}</h4>
                                 <span class="file-meta">${file.date} • ${file.size || '2MB'}</span>
                             </div>
-                            <button class="btn-icon" style="position: absolute; top: 10px; right: 10px;"><i class="ph ph-dots-three-vertical"></i></button>
+                            <div class="file-date-grid" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">${file.date}</div>
+                            <div class="file-actions-grid" style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <button class="btn-xs" style="padding: 0.3rem 0.6rem;" onclick="event.stopPropagation(); app.ui.renameFile(${file.id})"><i class="ph ph-pencil-simple"></i></button>
+                                <button class="btn-xs" style="padding: 0.3rem 0.6rem; background: rgba(255, 118, 117, 0.1); color: #ff7675;" onclick="event.stopPropagation(); app.ui.deleteFile(${file.id})"><i class="ph ph-trash"></i></button>
+                            </div>
                         </div>
                     `).join('')}
                     <!-- Add File Card -->
@@ -746,7 +754,7 @@ class UI {
                         <tbody>
                             ${files.map(file => `
                                 <tr>
-                                    <td>
+                                    <td onclick="app.ui.previewFile(${file.id})" style="cursor: pointer;">
                                         <div style="display: flex; align-items: center; gap: 0.8rem;">
                                             <i class="ph ph-file-${file.type}" style="color: ${getFileColor(file.subject)}; font-size: 1.2rem;"></i>
                                             ${file.name}
@@ -756,8 +764,9 @@ class UI {
                                     <td>${file.date}</td>
                                     <td>${file.size || '2MB'}</td>
                                     <td>
-                                        <button class="btn-icon"><i class="ph ph-download-simple"></i></button>
-                                        <button class="btn-icon" style="color: #ff7675;"><i class="ph ph-trash"></i></button>
+                                        <button class="btn-icon" onclick="app.ui.previewFile(${file.id})"><i class="ph ph-eye"></i></button>
+                                        <button class="btn-icon" onclick="app.ui.renameFile(${file.id})"><i class="ph ph-pencil-simple"></i></button>
+                                        <button class="btn-icon" style="color: #ff7675;" onclick="app.ui.deleteFile(${file.id})"><i class="ph ph-trash"></i></button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -929,14 +938,30 @@ class UI {
         // but if we want to be safe we could, but applySettings is visual enough.
     }
 
+    handleAvatarUpload(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                this.store.updateUser({ avatar: e.target.result });
+                this.renderProfile(); // Re-render to show new avatar in header and profile
+                this.showToast("Profile picture updated!", "success");
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     renderProfile() {
         const user = this.store.getUser();
         const content = `
             <div class="glass-panel animate-slide-up" style="padding: 3rem; max-width: 800px; margin: 0 auto;">
                 <div class="profile-header">
-                    <div class="profile-avatar">
-                        <img src="${user.avatar}" alt="${user.name}">
+                    <div class="profile-avatar" style="position: relative; cursor: pointer; overflow: hidden;" onclick="document.getElementById('avatar-upload').click()">
+                        <img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                        <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                            <i class="ph ph-camera" style="color: white; font-size: 2rem;"></i>
+                        </div>
                     </div>
+                    <input type="file" id="avatar-upload" hidden accept="image/*" onchange="app.ui.handleAvatarUpload(this)">
                     <div>
                         <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${user.name}</h1>
                         <p style="color: var(--text-muted); font-size: 1.2rem;">${user.grade}</p>
@@ -1023,7 +1048,7 @@ class UI {
 
     initKineticEffects() {
         // Simple Magnetic Effect implementation
-        const kineticElements = document.querySelectorAll('.icon-cell, .btn-primary');
+        const kineticElements = document.querySelectorAll('.icon-cell, .btn-primary, .kinetic-element');
 
         kineticElements.forEach(el => {
             el.addEventListener('mousemove', (e) => {
@@ -1221,10 +1246,37 @@ class UI {
     }
 
     // File Actions
+    // File Actions
     previewFile(id) {
         const file = this.store.getFile(id);
         if (!file) {
             this.showToast("File not found!", "error");
+            return;
+        }
+
+        if (file.isMock) {
+            // Simulated Viewer for Mock Files
+            const modalHtml = `
+                <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
+                    <div class="modal" style="width: 800px; height: 80vh; max-width: 95%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                            <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="ph ph-file-${file.type}" style="color: var(--primary);"></i>
+                                ${file.name}
+                            </h3>
+                            <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
+                                <i class="ph ph-x"></i>
+                            </button>
+                        </div>
+                        <div style="height: calc(100% - 60px); background: var(--bg-main); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 2rem;">
+                            <i class="ph ph-file-${file.type}" style="font-size: 5rem; color: var(--text-muted); opacity: 0.3; margin-bottom: 1rem;"></i>
+                            <h2 style="color: var(--text-muted);">Preview Not Available</h2>
+                            <p style="color: var(--text-muted);">This is a demo file. In a real application, the document viewer would appear here.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
             return;
         }
 
@@ -1236,6 +1288,26 @@ class UI {
             win.document.close(); // Important for some browsers
         } else {
             this.showToast("Pop-up blocked! Please allow pop-ups.", "error");
+        }
+    }
+
+    renameFile(id) {
+        const file = this.store.getFile(id);
+        if (!file) return;
+
+        const newName = prompt("Enter new file name:", file.name);
+        if (newName && newName.trim() !== "") {
+            this.store.renameFile(id, newName.trim());
+            this.renderDocuments(); // Re-render current view
+            this.showToast("File renamed successfully", "success");
+        }
+    }
+
+    deleteFile(id) {
+        if (confirm("Are you sure you want to delete this file?")) {
+            this.store.deleteFile(id);
+            this.renderDocuments(); // Re-render
+            this.showToast("File deleted", "success");
         }
     }
 
