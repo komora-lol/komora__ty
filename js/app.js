@@ -13,10 +13,10 @@ class App {
     init() {
         console.log('StudySpace Initializing...');
 
-        // Simulate loading time
+        // Simulate loading timeDDBB
         setTimeout(() => {
             document.querySelector('.loading-screen').classList.add('hidden');
-            this.ui.renderDashboard();
+            this.ui.renderWelcome();
         }, 800);
     }
 }

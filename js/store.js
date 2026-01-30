@@ -8,9 +8,74 @@ class Store {
         if (saved) {
             const data = JSON.parse(saved);
             Object.assign(this, data);
+
+            // Migration: Ensure prayers exist if loading old data
+            if (!this.prayers) {
+                this.prayers = [
+                    { id: 'fajr', name: 'الفجر', time: '7:06 am', completed: false },
+                    { id: 'sobhe', name: 'الصبح', time: '8:32 am', completed: false },
+                    { id: 'dhuhr', name: 'الظهر', time: '1:47 pm', completed: false },
+                    { id: 'asr', name: 'العصر', time: '4:42 pm', completed: false },
+                    { id: 'maghrib', name: 'المغرب', time: '7:03 pm', completed: false },
+                    { id: 'isha', name: 'العشاء', time: '8:23 pm', completed: false }
+                ];
+            } else {
+                // Migration: Update names to Arabic if needed
+                if (this.prayers[0].name === 'Fajr') {
+                    const arabicNames = { fajr: 'الفجر', dhuhr: 'الظهر', asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء' };
+                    this.prayers.forEach(p => p.name = arabicNames[p.id] || p.name);
+                    this.save();
+                }
+
+                // Migration: Add Sobh if missing
+                if (!this.prayers.find(p => p.id === 'sobhe')) {
+                    // Insert Sobh after Fajr (index 1)
+                    this.prayers.splice(1, 0, { id: 'sobhe', name: 'الصبح', time: '8:32 am', completed: false });
+                    this.save();
+                }
+            }
+
+            // Daily Reset Logic
+            const today = new Date().toDateString();
+            if (this.lastLoginDate !== today) {
+                this.prayers.forEach(p => p.completed = false);
+                if (this.dailySports) {
+                    this.dailySports.forEach(s => s.completed = false);
+                }
+                this.lastLoginDate = today;
+                this.save();
+            }
+
+            // Migration: Add dailySports if missing
+            if (!this.dailySports) {
+                this.dailySports = [
+                    { id: 'walk', name: 'المشي', duration: '30 دقيقة', icon: 'sneaker-move', completed: false },
+                    { id: 'stretch', name: 'تمارين التمدد', duration: '15 دقيقة', icon: 'person-simple-throw', completed: false },
+                    { id: 'cardio', name: 'تمارين خفيفة', duration: '20 دقيقة', icon: 'heartbeat', completed: false },
+                    { id: 'breath', name: 'تمارين التنفس', duration: '10 دقائق', icon: 'wind', completed: false }
+                ];
+                this.save();
+            }
+
+            // Migration: Clear mock recent files for existing users
+            if (this.recentFiles && this.recentFiles.some(f => f.isMock)) {
+                this.recentFiles = this.recentFiles.filter(f => !f.isMock);
+                this.save();
+            }
         } else {
             this.initDefaults();
         }
+
+        if (!this.achievements) {
+            this.achievements = [
+                { id: 'streak_7', title: '7 Day Streak', description: 'Study for 7 days in a row', icon: 'fire', unlocked: true },
+                { id: 'all_prayers', title: 'Faithful', description: 'Complete all 5 prayers in a day', icon: 'hands-praying', unlocked: false },
+                { id: 'sport_master', title: 'Active Body', description: 'Complete all daily sports', icon: 'sneaker-move', unlocked: false }
+            ];
+            this.save();
+        }
+
+        this.save(); // Save after all potential migrations/initializations
     }
 
     initDefaults() {
@@ -25,6 +90,24 @@ class Store {
                 assignmentsDone: 28
             }
         };
+
+        this.lastLoginDate = new Date().toDateString();
+
+        this.prayers = [
+            { id: 'fajr', name: 'الفجر', time: '05:30', completed: false },
+            { id: 'sobhe', name: 'الصبح', time: '8:32 am', completed: false },
+            { id: 'dhuhr', name: 'الظهر', time: '12:30', completed: false },
+            { id: 'asr', name: 'العصر', time: '15:45', completed: false },
+            { id: 'maghrib', name: 'المغرب', time: '18:15', completed: false },
+            { id: 'isha', name: 'العشاء', time: '19:45', completed: false }
+        ];
+
+        this.dailySports = [
+            { id: 'walk', name: 'المشي', duration: '30 دقيقة', icon: 'sneaker-move', completed: false },
+            { id: 'stretch', name: 'تمارين التمدد', duration: '15 دقيقة', icon: 'person-simple-throw', completed: false },
+            { id: 'cardio', name: 'تمارين خفيفة', duration: '20 دقيقة', icon: 'heartbeat', completed: false },
+            { id: 'breath', name: 'تمارين التنفس', duration: '10 دقائق', icon: 'wind', completed: false }
+        ];
 
         this.settings = {
             theme: 'light',
@@ -61,12 +144,7 @@ class Store {
             { id: 3, text: 'Read 20 pages of History', done: false }
         ];
 
-        this.recentFiles = [
-            { id: 101, name: 'Math_Functions_Summary.pdf', type: 'pdf', date: '2h ago', subject: 'math', category: 'lessons', isMock: true },
-            { id: 102, name: 'Physics_Mechanics_Ex1.docx', type: 'doc', date: '5h ago', subject: 'phys', category: 'exercises', isMock: true },
-            { id: 103, name: 'English_Vocabulary_List.pdf', type: 'pdf', date: '1d ago', subject: 'eng', category: 'lessons', isMock: true },
-            { id: 104, name: 'Math_Calculus_Exam_2024.pdf', type: 'pdf', date: '3d ago', subject: 'math', category: 'exams', isMock: true }
-        ];
+        this.recentFiles = [];
 
         this.weeklyProgress = [
             { day: 'Mon', hours: 4 },
@@ -90,6 +168,12 @@ class Store {
             { id: 1, title: 'Math Formulas', content: 'Remember quadratic formula...', color: '#ffeaa7' },
             { id: 2, title: 'French Verbs', content: 'Subjonctif endings: -e, -es, -e...', color: '#fab1a0' },
             { id: 3, title: 'Physics Project', content: 'Buy materials for the circuit.', color: '#74b9ff' }
+        ];
+
+        this.achievements = [
+            { id: 'streak_7', title: '7 Day Streak', description: 'Study for 7 days in a row', icon: 'fire', unlocked: true },
+            { id: 'all_prayers', title: 'Faithful', description: 'Complete all 5 prayers in a day', icon: 'hands-praying', unlocked: false },
+            { id: 'sport_master', title: 'Active Body', description: 'Complete all daily sports', icon: 'sneaker-move', unlocked: false }
         ];
     }
 
@@ -151,6 +235,11 @@ class Store {
             goal.done = !goal.done;
             this.save();
         }
+    }
+
+    deleteDailyGoal(id) {
+        this.dailyGoals = this.dailyGoals.filter(g => g.id !== id);
+        this.save();
     }
 
     getRecentFiles() {
@@ -235,5 +324,66 @@ class Store {
     updateUser(updates) {
         this.user = { ...this.user, ...updates };
         this.save();
+    }
+
+    getPrayers() {
+        return this.prayers || [];
+    }
+
+    togglePrayer(id) {
+        const prayer = this.prayers.find(p => p.id === id);
+        if (prayer) {
+            prayer.completed = !prayer.completed;
+            this.save();
+        }
+    }
+
+    getDailySports() {
+        return this.dailySports || [];
+    }
+
+    toggleDailySport(id) {
+        const sport = this.dailySports.find(s => s.id === id);
+        if (sport) {
+            sport.completed = !sport.completed;
+            this.save();
+        }
+        this.checkAchievements();
+    }
+
+    getAchievements() {
+        return this.achievements || [];
+    }
+
+    checkAchievements() {
+        // Simple mock logic for unlocking
+        if (this.dailySports && this.dailySports.every(s => s.completed)) {
+            this.unlockAchievement('sport_master');
+        }
+    }
+
+    unlockAchievement(id) {
+        const ach = this.achievements.find(a => a.id === id);
+        if (ach && !ach.unlocked) {
+            ach.unlocked = true;
+            this.save();
+            return true; // Unlocked just now
+        }
+        return false;
+    }
+
+    getDailyTip() {
+        // Use the date string to pick a deterministic random tip
+        const tips = this.tipsPool || ["Stay focused!"];
+        const day = new Date().getDate();
+        return tips[day % tips.length];
+    }
+
+    getStudentProgress() {
+        // Calculate based on goals or simple mock stats
+        const goals = this.dailyGoals || [];
+        if (goals.length === 0) return 0;
+        const completed = goals.filter(g => g.done).length;
+        return Math.round((completed / goals.length) * 100);
     }
 }

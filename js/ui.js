@@ -39,19 +39,59 @@ class UI {
         this.appContainer.innerHTML = `
             <header class="app-header">
                 <div class="header-left">
-                    <h3>${title}</h3>
+                    <h3 style="font-family: var(--font-heading);">${title}</h3>
                 </div>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <div style="text-align: right; margin-right: 0.5rem; display: none; @media(min-width: 768px){ display: block; }">
-                        <div style="font-weight: 700; font-size: 0.9rem;">${user.name}</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">${user.grade}</div>
+                
+                <!-- Search Bar -->
+                <div class="search-container" style="flex-grow: 1; max-width: 400px; margin: 0 2rem; position: relative;">
+                    <i class="ph ph-magnifying-glass" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); transition: color 0.3s;"></i>
+                    <input type="text" id="global-search" placeholder="Search lessons, tools..." 
+                           style="width: 100%; padding: 0.8rem 1rem 0.8rem 2.8rem; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-panel); color: var(--text-main); font-family: var(--font-main); transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.02);"
+                           onfocus="this.style.boxShadow='0 5px 15px rgba(108, 92, 231, 0.15)'; this.style.borderColor='var(--primary)';"
+                           onblur="this.style.boxShadow='0 2px 5px rgba(0,0,0,0.02)'; this.style.borderColor='var(--border)';"
+                           onkeyup="app.ui.handleSearch(event)">
+                </div>
+
+                <div style="display: flex; gap: 1.5rem; align-items: center;">
+                    
+                    <!-- Notification Bell -->
+                    <div class="notification-container" onclick="this.querySelector('.notification-dropdown').classList.toggle('active')">
+                        <i class="ph ph-bell notification-bell"></i>
+                        <div class="notification-badge">1</div>
+                        
+                        <div class="notification-dropdown glass-panel">
+                            <h4 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Notifications</h4>
+                            
+                            <div class="notification-item" style="display: flex; gap: 1rem; padding: 0.5rem; border-radius: var(--radius-sm); transition: background 0.2s; cursor: default;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 118, 117, 0.1); color: #ff7675; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <i class="ph ph-warning-circle" style="font-size: 1.2rem;"></i>
+                                </div>
+                                <div>
+                                    <h5 style="margin-bottom: 0.2rem; margin-top: 0; color: #d63031;">Upcoming Exam</h5>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Mathematics Mid-term in 3 days.</p>
+                                </div>
+                            </div>
+                             <div style="margin-top: 1rem; text-align: center;">
+                                <button class="btn-xs" style="width: 100%;">Mark all as read</button>
+                            </div>
+                        </div>
                     </div>
-                    <button class="btn btn-primary" id="theme-toggle">
-                        <i class="ph ph-moon"></i>
-                    </button>
-                    <!-- Text Logo -->
-                    <div style="font-family: var(--font-heading); font-weight: 800; font-size: 1.5rem; color: var(--text-main); margin-left: 1rem;" onclick="app.ui.renderDashboard()">
-                        StudySpace<span style="color: var(--primary);">.</span>
+
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <button class="btn btn-primary" id="theme-toggle" style="width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <i class="ph ph-moon" style="font-size: 1.2rem;"></i>
+                        </button>
+                        
+                        <!-- Profile Brief -->
+                        <div style="display: flex; align-items: center; gap: 0.8rem; cursor: pointer;" onclick="app.ui.renderProfile()">
+                             <div style="text-align: right; display: none; @media(min-width: 768px){ display: block; }">
+                                <div style="font-weight: 700; font-size: 0.9rem; font-family: var(--font-heading);">${user.name}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${user.grade}</div>
+                            </div>
+                            <div class="avatar-ring" style="width: 42px; height: 42px; border-radius: 50%; padding: 2px; border: 2px solid var(--primary);">
+                                <img src="${user.avatar}" alt="Profile" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -70,6 +110,8 @@ class UI {
 
                         <!-- System / Preferences -->
                         ${this.getSidebarItem('tips', 'lightbulb', 'Study Tips', activePage)}
+                        ${this.getSidebarItem('prayers', 'mosque', 'Daily Prayers', activePage)}
+                        ${this.getSidebarItem('sport', 'sneaker-move', 'Daily Sport', activePage)}
                         ${this.getSidebarItem('settings', 'gear', 'Settings', activePage)}
                         <div class="icon-cell ${activePage === 'profile' ? 'active' : ''}" data-tooltip="Profile" onclick="app.ui.renderProfile()">
                             <div style="width: 24px; height: 24px; border-radius: 50%; background: #ddd; overflow: hidden;">
@@ -117,12 +159,20 @@ class UI {
         const user = this.store.getUser();
 
         const content = `
-            <div style="margin-bottom: 2rem;">
-                 <h2 style="margin-bottom: 0.5rem; font-size: 2rem; color: var(--text-main);">Welcome back, ${user.name} 👋</h2>
-                 <p style="color: var(--text-muted); font-size: 1.1rem;">Ready to achieve your goals today?</p>
+            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end;">
+                 <div>
+                    <h2 id="dynamic-greeting" style="margin-bottom: 0.5rem; font-size: 2.2rem; font-family: var(--font-heading); color: var(--text-main); font-weight: 700;">Welcome back, ${user.name} 👋</h2>
+                    <p style="color: var(--text-muted); font-size: 1.1rem;">Ready to achieve your goals today?</p>
+                 </div>
+                 <div class="glass-panel" style="padding: 0.5rem 1.5rem; font-family: var(--font-heading); font-size: 1.5rem; font-weight: 700; color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                    <span id="live-clock">--:--</span>
+                 </div>
             </div>
 
             <section class="goals-section">
+                <!-- Visual Reminder -->
+
+
                 <div class="glass-panel goal-card">
                     <i class="ph ph-target" style="font-size: 2rem; color: var(--primary);"></i>
                     <div>
@@ -151,16 +201,46 @@ class UI {
                 <div class="widget-col">
                     ${this.renderDailyFocus()}
                     ${this.renderWeeklyProgress()}
+                    ${this.renderMotivation()}
                 </div>
 
                 <!-- Middle Column -->
                 <div class="widget-col">
                     ${this.renderQuickFiles()}
-                    ${this.renderMotivation()}
+                    
+                    <!-- Quick Note Widget -->
+                    <div class="glass-panel widget-card">
+                        <div class="widget-header">
+                            <h4 style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="ph ph-sticky-note" style="color: #fdcb6e;"></i>
+                                Quick Note
+                            </h4>
+                        </div>
+                        <textarea id="quick-note-area" placeholder="Jot down a thought..." 
+                            style="width: 100%; height: 100px; border: none; background: transparent; resize: none; font-family: var(--font-main); color: var(--text-main); font-size: 0.95rem; outline: none;"
+                            oninput="localStorage.setItem('quickNote', this.value)">${localStorage.getItem('quickNote') || ''}</textarea>
+                    </div>
+
+                    <div class="glass-panel widget-card">
+                         <div class="widget-header">
+                            <h4 style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="ph ph-trophy" style="color: #f1c40f;"></i>
+                                Achievements
+                            </h4>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            ${this.store.getAchievements().map(ach => `
+                                <div class="icon-cell ${ach.unlocked ? '' : 'locked'}" style="width: 40px; height: 40px; font-size: 1.2rem; background: ${ach.unlocked ? 'var(--primary-glow)' : 'var(--bg-main)'}; color: ${ach.unlocked ? 'var(--primary)' : 'var(--text-muted)'}; opacity: ${ach.unlocked ? 1 : 0.5};" data-tooltip="${ach.title}: ${ach.description}">
+                                    <i class="ph ph-${ach.icon}"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right Column -->
                 <div class="widget-col">
+                    ${this.renderProgressTracker()}
                     ${this.renderPomodoroTimer()}
                 </div>
             </div>
@@ -173,9 +253,53 @@ class UI {
 
         this.renderLayout('dashboard', 'Dashboard', content);
         this.initPomodoroLogic();
+        this.initClock();
+    }
+
+    renderReminders() {
+        return `
+            <div class="glass-panel widget-card" style="background: linear-gradient(135deg, rgba(255, 118, 117, 0.1) 0%, rgba(214, 48, 49, 0.1) 100%); border-left: 4px solid #ff7675; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; gap: 1rem;">
+                        <div style="background: rgba(255, 118, 117, 0.2); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ff7675;">
+                             <i class="ph ph-bell-ringing" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div>
+                             <h4 style="margin-bottom: 0.2rem; color: #d63031;">Upcoming Exam</h4>
+                             <p style="font-size: 0.9rem; color: var(--text-muted);">Mathematics Mid-term in 3 days.</p>
+                        </div>
+                    </div>
+                    <button class="btn-icon" style="color: var(--text-muted);" onclick="this.closest('.widget-card').remove()">
+                        <i class="ph ph-x"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    renderProgressTracker() {
+        const progress = this.store.getStudentProgress();
+        return `
+            <div class="glass-panel widget-card">
+                 <div class="widget-header">
+                    <h4 style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ph ph-trend-up" style="color: var(--secondary); font-size: 1.2rem;"></i>
+                        Daily Progress
+                    </h4>
+                    <span class="badge" style="background: var(--secondary-glow); color: var(--secondary);">${progress}%</span>
+                </div>
+                <div class="glowing-progress-track" style="height: 12px;">
+                    <div class="glowing-progress-bar" style="width: ${progress}%; background: var(--secondary); box-shadow: 0 0 10px var(--secondary);"></div>
+                </div>
+                 <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                    ${progress === 100 ? '🎉 Amazing! All goals completed!' : 'Keep going, you are doing great!'}
+                </p>
+            </div>
+        `;
     }
 
     renderDailyFocus() {
+        const goals = this.store.getDailyGoals();
         return `
             <div class="glass-panel widget-card" style="border-left: 4px solid var(--primary);">
                 <div class="widget-header">
@@ -183,24 +307,48 @@ class UI {
                         <i class="ph ph-target" style="color: var(--primary); font-size: 1.2rem;"></i>
                         Daily Focus
                     </h4>
-                    <span class="badge" style="background: var(--primary-glow); color: var(--primary);">Today</span>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <span class="badge" style="background: var(--primary-glow); color: var(--primary);">Today</span>
+                        <button class="btn-xs" onclick="app.ui.addGoal()" style="background: var(--primary); color: white; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <i class="ph ph-plus"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="focus-list">
-                    <div class="focus-item">
-                        <input type="checkbox" id="focus1">
-                        <label for="focus1">Complete Math Exercises p.42</label>
-                    </div>
-                    <div class="focus-item">
-                         <input type="checkbox" id="focus2">
-                        <label for="focus2">Read History Chapter 3</label>
-                    </div>
-                     <div class="focus-item">
-                         <input type="checkbox" id="focus3">
-                        <label for="focus3">Physics Revision</label>
-                    </div>
+                    ${goals.length > 0 ? goals.map(goal => `
+                        <div class="focus-item ${goal.done ? 'completed' : ''}" style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-grow: 1;">
+                                <input type="checkbox" id="focus-${goal.id}" ${goal.done ? 'checked' : ''} onchange="app.ui.toggleGoal(${goal.id})">
+                                <label for="focus-${goal.id}" style="${goal.done ? 'text-decoration: line-through; opacity: 0.7;' : ''}">${goal.text}</label>
+                            </div>
+                            <button class="btn-xs delete-btn" onclick="app.ui.deleteGoal(${goal.id})" style="color: var(--text-muted); opacity: 0.5; padding: 2px;">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </div>
+                    `).join('') : `
+                        <div style="text-align: center; color: var(--text-muted); padding: 1rem; font-style: italic;">
+                            No focus tasks yet. <br>Click + to add one!
+                        </div>
+                    `}
                 </div>
             </div>
         `;
+    }
+
+    deleteGoal(id) {
+        if (confirm("Delete this task?")) {
+            this.store.deleteDailyGoal(id);
+            this.renderDashboard();
+        }
+    }
+
+    toggleGoal(id) {
+        this.store.toggleDailyGoal(id);
+        const goal = this.store.getDailyGoals().find(g => g.id === id);
+        if (goal && goal.done) {
+            this.triggerConfetti();
+        }
+        this.renderDashboard();
     }
 
     renderPomodoroTimer() {
@@ -304,14 +452,138 @@ class UI {
 
     renderMotivation() {
         return `
-             <div class="glass-panel widget-card motivation-card">
-                <i class="ph ph-quotes" style="font-size: 2rem; color: var(--accent); opacity: 0.5; margin-bottom: 0.5rem;"></i>
-                <p class="quote-text">"${this.store.getRandomQuote()}"</p>
+             <div class="glass-panel widget-card" style="background: linear-gradient(135deg, var(--bg-panel) 0%, rgba(253, 121, 168, 0.1) 100%);">
+                 <div class="widget-header">
+                     <h4 style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent);">
+                        <i class="ph ph-lightbulb"></i>
+                        Tip of the Day
+                    </h4>
+                </div>
+                <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; text-align: center;">
+                    <p class="quote-text" style="font-size: 1rem;">"${this.store.getDailyTip()}"</p>
+                </div>
             </div>
         `;
     }
 
+    renderPrayers() {
+        const prayers = this.store.getPrayers();
+        const content = `
+             <div style="max-width: 600px; margin: 0 auto;" class="animate-slide-up">
+                 <div class="glass-panel widget-card prayer-widget" style="padding: 2rem;">
+                     <div class="widget-header" style="margin-bottom: 0.5rem; justify-content: center;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.5rem;">
+                            <i class="ph ph-mosque" style="color: var(--secondary); font-size: 1.8rem;"></i>
+                            جدول الصلوات اليومية 🕌
+                        </h4>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem; color: var(--text-muted); font-size: 1rem; text-align: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                        <span style="font-style: italic;">"الصلاة أساس الانضباط والتركيز."</span>
+                    </div>
+
+                    <div class="prayer-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${prayers.map(p => `
+                            <div class="prayer-item ${p.id === 'fajr' ? 'fajr-highlight' : ''} ${p.completed ? 'completed' : ''}" 
+                                 onclick="app.ui.togglePrayer('${p.id}')"
+                                 style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div class="prayer-checkbox ${p.completed ? 'checked' : ''}" style="width: 24px; height: 24px;">
+                                        ${p.completed ? '<i class="ph ph-check" style="color: white; font-size: 1rem;"></i>' : ''}
+                                    </div>
+                                    <span style="font-weight: 600; font-size: 1.1rem;">${p.name}</span>
+                                </div>
+                                <span style="font-size: 1rem; color: var(--text-muted); font-family: monospace;">${p.time}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.renderLayout('prayers', 'Daily Prayers', content);
+    }
+
+    renderSport() {
+        const sports = this.store.getDailySports();
+        const content = `
+            <div class="animate-slide-up" style="max-width: 900px; margin: 0 auto;">
+                
+                <!-- Reminder Widget (Visual Only) -->
+                ${this.renderReminders()}
+
+                <!-- Progress Tracker -->
+                ${this.renderProgressTracker()}
+
+                <!-- Intro / Benefits Section -->
+                <div class="glass-panel widget-card" style="margin-bottom: 2rem; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));">
+                     <div class="widget-header" style="justify-content: center; margin-bottom: 1.5rem;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.8rem; color: var(--text-main);">
+                            <i class="ph ph-sneaker-move" style="color: var(--accent);"></i>
+                            الرياضة اليومية 🏃‍♂️
+                        </h4>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; text-align: center;">
+                        <div class="benefit-card">
+                            <i class="ph ph-brain" style="font-size: 2rem; color: #74b9ff; margin-bottom: 0.5rem;"></i>
+                            <h5 style="margin-bottom: 0.2rem;">تنشيط العقل</h5>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">تحسين الدورة الدموية وزيادة الاستيعاب.</p>
+                        </div>
+                        <div class="benefit-card">
+                            <i class="ph ph-target" style="font-size: 2rem; color: #ff7675; margin-bottom: 0.5rem;"></i>
+                            <h5 style="margin-bottom: 0.2rem;">تحسين التركيز</h5>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">زيادة القدرة على الانتباه أثناء المذاكرة.</p>
+                        </div>
+                         <div class="benefit-card">
+                            <i class="ph ph-smiley" style="font-size: 2rem; color: #fdcb6e; margin-bottom: 0.5rem;"></i>
+                            <h5 style="margin-bottom: 0.2rem;">تقليل التوتر</h5>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">إفراز هرمونات السعادة والاسترخاء.</p>
+                        </div>
+                         <div class="benefit-card">
+                            <i class="ph ph-lightning" style="font-size: 2rem; color: #55efc4; margin-bottom: 0.5rem;"></i>
+                            <h5 style="margin-bottom: 0.2rem;">رفع الطاقة</h5>
+                            <p style="font-size: 0.9rem; color: var(--text-muted);">تجديد النشاط والحيوية للدراسة.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Section -->
+                <h3 style="margin-bottom: 1rem; color: var(--text-main);">قائمة الأنشطة اليومية</h3>
+                <div class="sports-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem;">
+                    ${sports.map(s => `
+                        <div class="glass-panel sport-card ${s.completed ? 'completed' : ''}" 
+                             onclick="app.ui.toggleSport('${s.id}')"
+                             style="cursor: pointer; transition: all 0.3s ease; border: 2px solid ${s.completed ? 'var(--primary)' : 'transparent'}; position: relative; overflow: hidden;">
+                             
+                             ${s.completed ? '<div style="position: absolute; top: 10px; right: 10px; color: var(--primary);"><i class="ph ph-check-circle" style="font-size: 1.5rem;"></i></div>' : ''}
+
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1rem;">
+                                <div class="sport-icon" style="width: 60px; height: 60px; background: var(--bg-body); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--accent);">
+                                    <i class="ph ph-${s.icon}"></i>
+                                </div>
+                                <h4 style="font-size: 1.2rem; margin: 0;">${s.name}</h4>
+                                <span class="badge" style="background: var(--border); color: var(--text-muted);">${s.duration}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+    `;
+        this.renderLayout('sport', 'Daily Sport', content);
+    }
+
+    toggleSport(id) {
+        this.store.toggleDailySport(id);
+        this.renderSport();
+    }
+
     // Logic Methods
+
+    togglePrayer(id) {
+        this.store.togglePrayer(id);
+        this.renderPrayers();
+    }
 
     toggleGoal(id) {
         this.store.toggleDailyGoal(id);
@@ -348,7 +620,7 @@ class UI {
         const updateDisplay = () => {
             const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
             const s = (timeLeft % 60).toString().padStart(2, '0');
-            display.textContent = `${m}:${s}`;
+            display.textContent = `${m}:${s} `;
 
             // Update Circle
             const progress = timeLeft / originalTime;
@@ -435,8 +707,8 @@ class UI {
         const hours = Array.from({ length: 15 }, (_, i) => i + 8); // 8:00 to 22:00
 
         const content = `
-            <div class="calendar-wrapper animate-slide-up">
-                <!-- Time Column -->
+    <div class="calendar-wrapper animate-slide-up" >
+                <!--Time Column-->
                 <div class="time-column">
                     <div style="height: 50px;"></div> <!-- Spacer for header -->
                     ${hours.map(hour => `
@@ -446,20 +718,20 @@ class UI {
                     `).join('')}
                 </div>
 
-                <!-- Week Grid -->
-                <div class="week-grid">
-                    <!-- Headers -->
-                    ${days.map(day => `
+                <!--Week Grid-->
+    <div class="week-grid">
+        <!-- Headers -->
+        ${days.map(day => `
                         <div class="day-header">${day}</div>
                     `).join('')}
 
-                    <!-- Grid Cells -->
-                    <div class="calendar-row">
-                        ${this.generateCalendarCells(days, hours, events)}
-                    </div>
-                </div>
+        <!-- Grid Cells -->
+        <div class="calendar-row">
+            ${this.generateCalendarCells(days, hours, events)}
+        </div>
+    </div>
             </div>
-        `;
+    `;
 
         this.renderLayout('schedule', 'Weekly Schedule', content);
     }
@@ -479,17 +751,17 @@ class UI {
 
                 if (event) {
                     html += `
-                        <div class="calendar-cell" onclick="app.ui.editEvent(${event.id})">
-                            <div class="event-block" style="background: ${event.color};">
-                                <span>${event.title}</span>
-                                <span class="event-time">${event.type}</span>
-                            </div>
+    <div class="calendar-cell" onclick = "app.ui.editEvent(${event.id})" >
+        <div class="event-block" style="background: ${event.color};">
+            <span>${event.title}</span>
+            <span class="event-time">${event.type}</span>
+        </div>
                         </div>
-                    `;
+    `;
                 } else {
                     html += `
-                        <div class="calendar-cell" onclick="app.ui.openEventModal('${day}', '${timeStr}')"></div>
-                    `;
+    <div class="calendar-cell" onclick = "app.ui.openEventModal('${day}', '${timeStr}')" ></div>
+        `;
                 }
             });
         });
@@ -508,43 +780,43 @@ class UI {
         const colorValue = isEdit ? event.color : '#ff7675';
 
         const modalHtml = `
-            <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
-                <div class="modal">
-                    <h3>${isEdit ? 'Edit Event' : 'Add Event'}</h3>
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" id="event-title" class="form-input" placeholder="e.g. Math Class" value="${titleValue}" autofocus>
+        <div class="modal-overlay active" onclick = "if(event.target === this) this.remove()" >
+            <div class="modal">
+                <h3>${isEdit ? 'Edit Event' : 'Add Event'}</h3>
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="event-title" class="form-input" placeholder="e.g. Math Class" value="${titleValue}" autofocus>
+                </div>
+                <div class="form-group">
+                    <label>Type</label>
+                    <select id="event-type" class="form-select">
+                        <option value="class" ${typeValue === 'class' ? 'selected' : ''}>Class</option>
+                        <option value="study" ${typeValue === 'study' ? 'selected' : ''}>Study Session</option>
+                        <option value="exam" ${typeValue === 'exam' ? 'selected' : ''}>Exam</option>
+                        <option value="other" ${typeValue === 'other' ? 'selected' : ''}>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div class="color-options">
+                        ${this.renderColorOption('#ff7675', colorValue === '#ff7675')}
+                        ${this.renderColorOption('#74b9ff', colorValue === '#74b9ff')}
+                        ${this.renderColorOption('#55efc4', colorValue === '#55efc4')}
+                        ${this.renderColorOption('#fd79a8', colorValue === '#fd79a8')}
+                        ${this.renderColorOption('#a29bfe', colorValue === '#a29bfe')}
+                        ${this.renderColorOption('#fab1a0', colorValue === '#fab1a0')}
                     </div>
-                     <div class="form-group">
-                        <label>Type</label>
-                        <select id="event-type" class="form-select">
-                            <option value="class" ${typeValue === 'class' ? 'selected' : ''}>Class</option>
-                            <option value="study" ${typeValue === 'study' ? 'selected' : ''}>Study Session</option>
-                            <option value="exam" ${typeValue === 'exam' ? 'selected' : ''}>Exam</option>
-                            <option value="other" ${typeValue === 'other' ? 'selected' : ''}>Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Color</label>
-                        <div class="color-options">
-                            ${this.renderColorOption('#ff7675', colorValue === '#ff7675')}
-                            ${this.renderColorOption('#74b9ff', colorValue === '#74b9ff')}
-                            ${this.renderColorOption('#55efc4', colorValue === '#55efc4')}
-                            ${this.renderColorOption('#fd79a8', colorValue === '#fd79a8')}
-                            ${this.renderColorOption('#a29bfe', colorValue === '#a29bfe')}
-                            ${this.renderColorOption('#fab1a0', colorValue === '#fab1a0')}
-                        </div>
-                    </div>
-                    <div class="btn-group" style="justify-content: space-between;">
-                        ${isEdit ? `<button class="btn" style="color: #ff7675; background: rgba(255, 118, 117, 0.1);" onclick="app.ui.deleteEvent(${event.id})">Delete</button>` : '<div></div>'}
-                        <div style="display: flex; gap: 1rem;">
-                            <button class="btn" onclick="document.querySelector('.modal-overlay').remove()">Cancel</button>
-                            <button class="btn btn-primary" onclick="app.ui.saveEvent('${day}', '${time}', ${isEdit ? event.id : null})">Save</button>
-                        </div>
+                </div>
+                <div class="btn-group" style="justify-content: space-between;">
+                    ${isEdit ? `<button class="btn" style="color: #ff7675; background: rgba(255, 118, 117, 0.1);" onclick="app.ui.deleteEvent(${event.id})">Delete</button>` : '<div></div>'}
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn" onclick="document.querySelector('.modal-overlay').remove()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.ui.saveEvent('${day}', '${time}', ${isEdit ? event.id : null})">Save</button>
                     </div>
                 </div>
             </div>
-        `;
+            </div>
+    `;
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
@@ -557,7 +829,7 @@ class UI {
     }
 
     renderColorOption(color, selected = false) {
-        return `<div class="color-option ${selected ? 'selected' : ''}" style="background: ${color};" data-color="${color}"></div>`;
+        return `<div class="color-option ${selected ? 'selected' : ''}" style = "background: ${color};" data - color="${color}" ></div> `;
     }
 
     saveEvent(day, time, id) {
@@ -597,8 +869,8 @@ class UI {
     renderNotes() {
         const notes = this.store.getNotes();
         const content = `
-             <div class="notes-grid">
-                ${notes.map((note, index) => `
+    <div class="notes-grid" >
+        ${notes.map((note, index) => `
                     <div class="glass-panel note-card animate-slide-up" onclick="app.ui.openNoteModal(${note.id})" style="background: ${note.color}20; border-left: 44px solid ${note.color}; animation-delay: ${index * 100}ms;">
                         <h4 style="color: var(--text-main);">${note.title}</h4>
                         <p>${note.content}</p>
@@ -606,14 +878,15 @@ class UI {
                             <i class="ph ph-push-pin" style="color: ${note.color}; font-size: 1.2rem;"></i>
                         </div>
                     </div>
-                `).join('')}
-                
-                <div class="glass-panel note-card" onclick="app.ui.openNoteModal()" style="align-items: center; justify-content: center; border: 2px dashed var(--border); background: transparent; opacity: 0.7;">
-                    <i class="ph ph-plus" style="font-size: 2rem; color: var(--primary);"></i>
-                    <p style="flex-grow: 0; margin-top: 0.5rem;">Add Note</p>
-                </div>
+                `).join('')
+            }
+
+<div class="glass-panel note-card" onclick="app.ui.openNoteModal()" style="align-items: center; justify-content: center; border: 2px dashed var(--border); background: transparent; opacity: 0.7;">
+    <i class="ph ph-plus" style="font-size: 2rem; color: var(--primary);"></i>
+    <p style="flex-grow: 0; margin-top: 0.5rem;">Add Note</p>
+</div>
             </div>
-        `;
+    `;
         this.renderLayout('notes', 'My Notes', content);
     }
 
@@ -629,37 +902,37 @@ class UI {
         const colorValue = isEdit ? note.color : '#ffeaa7';
 
         const modalHtml = `
-            <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
-                <div class="modal">
-                    <h3>${isEdit ? 'Edit Note' : 'Add New Note'}</h3>
-                    <div class="form-group">
-                        <label>Title</label>
-                        <input type="text" id="note-title" class="form-input" placeholder="Note Title" value="${titleValue}" autofocus>
-                    </div>
-                     <div class="form-group">
-                        <label>Content</label>
-                        <textarea id="note-content" class="form-input" rows="5" placeholder="Write your note here...">${contentValue}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Color</label>
-                        <div class="color-options">
-                            ${this.renderColorOption('#ffeaa7', colorValue === '#ffeaa7')}
-                            ${this.renderColorOption('#fab1a0', colorValue === '#fab1a0')}
-                            ${this.renderColorOption('#74b9ff', colorValue === '#74b9ff')}
-                            ${this.renderColorOption('#55efc4', colorValue === '#55efc4')}
-                            ${this.renderColorOption('#a29bfe', colorValue === '#a29bfe')}
-                        </div>
-                    </div>
-                    <div class="btn-group" style="justify-content: space-between;">
-                        ${isEdit ? `<button class="btn" style="color: #ff7675; background: rgba(255, 118, 117, 0.1);" onclick="app.ui.deleteNote(${note.id})">Delete</button>` : '<div></div>'}
-                        <div style="display: flex; gap: 1rem;">
-                            <button class="btn" onclick="document.querySelector('.modal-overlay').remove()">Cancel</button>
-                            <button class="btn btn-primary" onclick="app.ui.saveNote(${isEdit ? note.id : null})">Save</button>
-                        </div>
-                    </div>
+    <div class="modal-overlay active" onclick = "if(event.target === this) this.remove()" >
+        <div class="modal">
+            <h3>${isEdit ? 'Edit Note' : 'Add New Note'}</h3>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="note-title" class="form-input" placeholder="Note Title" value="${titleValue}" autofocus>
+            </div>
+            <div class="form-group">
+                <label>Content</label>
+                <textarea id="note-content" class="form-input" rows="5" placeholder="Write your note here...">${contentValue}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <div class="color-options">
+                    ${this.renderColorOption('#ffeaa7', colorValue === '#ffeaa7')}
+                    ${this.renderColorOption('#fab1a0', colorValue === '#fab1a0')}
+                    ${this.renderColorOption('#74b9ff', colorValue === '#74b9ff')}
+                    ${this.renderColorOption('#55efc4', colorValue === '#55efc4')}
+                    ${this.renderColorOption('#a29bfe', colorValue === '#a29bfe')}
                 </div>
             </div>
-        `;
+            <div class="btn-group" style="justify-content: space-between;">
+                ${isEdit ? `<button class="btn" style="color: #ff7675; background: rgba(255, 118, 117, 0.1);" onclick="app.ui.deleteNote(${note.id})">Delete</button>` : '<div></div>'}
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn" onclick="document.querySelector('.modal-overlay').remove()">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.ui.saveNote(${isEdit ? note.id : null})">Save</button>
+                </div>
+            </div>
+        </div>
+            </div>
+    `;
 
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
@@ -714,8 +987,8 @@ class UI {
         let filesHtml = '';
         if (this.documentsView === 'grid') {
             filesHtml = `
-                <div class="files-grid">
-                    ${files.map(file => `
+    <div class="files-grid" >
+        ${files.map(file => `
                         <div class="glass-panel file-card-grid" style="border-top: 4px solid ${getFileColor(file.subject)}" onclick="app.ui.previewFile(${file.id})">
                             <div class="file-icon-large">
                                 <i class="ph ph-file-${file.type}"></i>
@@ -730,29 +1003,30 @@ class UI {
                                 <button class="btn-xs" style="padding: 0.3rem 0.6rem; background: rgba(255, 118, 117, 0.1); color: #ff7675;" onclick="event.stopPropagation(); app.ui.deleteFile(${file.id})"><i class="ph ph-trash"></i></button>
                             </div>
                         </div>
-                    `).join('')}
-                    <!-- Add File Card -->
-                     <div class="glass-panel file-card-grid dashed" onclick="app.ui.openUploadModal()">
-                        <i class="ph ph-upload-simple" style="font-size: 2rem; color: var(--primary);"></i>
-                        <span style="margin-top: 0.5rem; font-weight: 600;">Upload File</span>
-                    </div>
+                    `).join('')
+                }
+                    <!--Add File Card-->
+    <div class="glass-panel file-card-grid dashed" onclick="app.ui.openUploadModal()">
+        <i class="ph ph-upload-simple" style="font-size: 2rem; color: var(--primary);"></i>
+        <span style="margin-top: 0.5rem; font-weight: 600;">Upload File</span>
+    </div>
                 </div>
-            `;
+    `;
         } else {
             filesHtml = `
-                <div class="glass-panel" style="overflow-x: auto;">
-                    <table class="files-table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Subject</th>
-                                <th>Date</th>
-                                <th>Size</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${files.map(file => `
+    <div class="glass-panel" style = "overflow-x: auto;" >
+        <table class="files-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>Size</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${files.map(file => `
                                 <tr>
                                     <td onclick="app.ui.previewFile(${file.id})" style="cursor: pointer;">
                                         <div style="display: flex; align-items: center; gap: 0.8rem;">
@@ -770,17 +1044,17 @@ class UI {
                                     </td>
                                 </tr>
                             `).join('')}
-                        </tbody>
-                    </table>
+            </tbody>
+        </table>
                 </div>
-                <button class="btn btn-primary" style="margin-top: 1rem;" onclick="app.ui.openUploadModal()">
-                    <i class="ph ph-upload-simple"></i> Upload New File
-                </button>
-            `;
+    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="app.ui.openUploadModal()">
+        <i class="ph ph-upload-simple"></i> Upload New File
+    </button>
+`;
         }
 
         const content = `
-            <div class="docs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div class="docs-header" style = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;" >
                 <div class="view-toggles glass-panel" style="padding: 0.5rem; display: flex; gap: 0.5rem;">
                     <button class="btn-icon ${this.documentsView === 'list' ? 'active' : ''}" onclick="app.ui.setDocumentsView('list')"><i class="ph ph-list"></i></button>
                     <button class="btn-icon ${this.documentsView === 'grid' ? 'active' : ''}" onclick="app.ui.setDocumentsView('grid')"><i class="ph ph-grid-four"></i></button>
@@ -790,8 +1064,8 @@ class UI {
                     <input type="text" placeholder="Search files..." style="border: none; background: transparent; outline: none; color: var(--text-main);">
                 </div>
             </div>
-            ${filesHtml}
-        `;
+    ${filesHtml}
+`;
 
         this.renderLayout('documents', 'My Documents', content);
     }
@@ -803,27 +1077,27 @@ class UI {
 
     openUploadModal() {
         const modalHtml = `
-            <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
-                <div class="modal">
-                    <h3>Upload File</h3>
-                    <div class="upload-area" id="drop-zone">
-                        <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
-                        <p>Drag & Drop files here or</p>
-                        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse Files</button>
-                        <input type="file" id="file-input" hidden onchange="app.ui.handleFileUpload(this.files[0])">
-                    </div>
-                    <div id="upload-progress" style="display: none; margin-top: 1.5rem;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                            <span id="upload-filename">frontend_assignment.pdf</span>
-                            <span id="upload-percent">0%</span>
-                        </div>
-                        <div class="progress-bar" style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
-                            <div id="upload-bar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.2s;"></div>
-                        </div>
-                    </div>
+    <div class="modal-overlay active" onclick = "if(event.target === this) this.remove()" >
+        <div class="modal">
+            <h3>Upload File</h3>
+            <div class="upload-area" id="drop-zone">
+                <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+                <p>Drag & Drop files here or</p>
+                <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse Files</button>
+                <input type="file" id="file-input" hidden onchange="app.ui.handleFileUpload(this.files[0])">
+            </div>
+            <div id="upload-progress" style="display: none; margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span id="upload-filename">frontend_assignment.pdf</span>
+                    <span id="upload-percent">0%</span>
+                </div>
+                <div class="progress-bar" style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+                    <div id="upload-bar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.2s;"></div>
                 </div>
             </div>
-        `;
+        </div>
+            </div>
+    `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
@@ -885,10 +1159,10 @@ class UI {
         const user = this.store.getUser();
 
         const content = `
-            <h2>Settings</h2>
-            
-            <div class="glass-panel" style="padding: 2rem; max-width: 600px;">
-                        </select>
+    < h2 > Settings</h2 >
+
+        <div class="glass-panel" style="padding: 2rem; max-width: 600px;">
+        </select>
                     </div>
                      <div class="settings-item">
                         <span>Language</span>
@@ -904,7 +1178,7 @@ class UI {
                             <div class="toggle-thumb"></div>
                         </div>
                     </div>
-                     <!-- Study Tips Permissions Section -->
+                     <!--Study Tips Permissions Section-->
                     <div class="settings-divider" style="height: 1px; background: var(--border); margin: 2rem 0;"></div>
                     <h3 style="margin-bottom: 1rem;">Study Tips Permissions</h3>
                     <div class="settings-item">
@@ -921,7 +1195,7 @@ class UI {
                     </div>
                 </div>
             </div>
-        `;
+    `;
         this.renderLayout('settings', 'Settings', content);
     }
 
@@ -953,7 +1227,7 @@ class UI {
     renderProfile() {
         const user = this.store.getUser();
         const content = `
-            <div class="glass-panel animate-slide-up" style="padding: 3rem; max-width: 800px; margin: 0 auto;">
+    <div class="glass-panel animate-slide-up" style = "padding: 3rem; max-width: 800px; margin: 0 auto;" >
                 <div class="profile-header">
                     <div class="profile-avatar" style="position: relative; cursor: pointer; overflow: hidden;" onclick="document.getElementById('avatar-upload').click()">
                         <img src="${user.avatar}" alt="${user.name}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -1041,7 +1315,7 @@ class UI {
                     </div>
                 </div>
             </div>
-        `;
+    `;
 
         this.renderLayout('profile', 'My Profile', content);
     }
@@ -1068,7 +1342,7 @@ class UI {
 
     renderSubject(subject) {
         const content = `
-            <header class="app-header" style="margin-bottom: 2rem;">
+    < header class="app-header" style = "margin-bottom: 2rem;" >
                 <div class="header-left">
                     <button class="btn" id="back-btn" style="background: transparent; padding-left: 0; color: var(--text-muted);">
                         <i class="ph ph-arrow-left"></i> Back
@@ -1080,24 +1354,24 @@ class UI {
                 <button class="btn btn-primary">
                     <i class="ph ph-plus"></i> Add File
                 </button>
-            </header>
+            </header >
 
-            <main class="subject-detail animate-slide-up">
-                <div class="tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                    <button class="btn active" style="background: var(--primary); color: white;">Lessons</button>
-                    <button class="btn" style="background: transparent; color: var(--text-muted);">Exercises</button>
-                    <button class="btn" style="background: transparent; color: var(--text-muted);">Exams</button>
-                </div>
+    <main class="subject-detail animate-slide-up">
+        <div class="tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+            <button class="btn active" style="background: var(--primary); color: white;">Lessons</button>
+            <button class="btn" style="background: transparent; color: var(--text-muted);">Exercises</button>
+            <button class="btn" style="background: transparent; color: var(--text-muted);">Exams</button>
+        </div>
 
-                <div class="glass-panel" style="padding: 2rem; text-align: center; color: var(--text-muted);">
-                    <i class="ph ph-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                    <p>No content uploaded for ${subject.name} yet.</p>
-                    <button class="btn btn-primary" style="margin: 1rem auto;">Upload first lesson</button>
-                </div>
-            </main>
-        `;
+        <div class="glass-panel" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+            <i class="ph ph-folder-open" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+            <p>No content uploaded for ${subject.name} yet.</p>
+            <button class="btn btn-primary" style="margin: 1rem auto;">Upload first lesson</button>
+        </div>
+    </main>
+`;
 
-        this.renderLayout('dashboard', `Subject: ${subject.name}`, content);
+        this.renderLayout('dashboard', `Subject: ${subject.name} `, content);
 
         // Re-bind back button since renderLayout wipes DOM
         document.getElementById('back-btn').addEventListener('click', () => this.renderDashboard());
@@ -1105,9 +1379,9 @@ class UI {
 
     createSubjectCard(subject, index) {
         return `
-            <div class="glass-panel subject-card animate-slide-up" 
-                 onclick="app.ui.renderSubjectDetails('${subject.id}')"
-                 style="--subject-color: ${subject.color}; animation-delay: ${index * 100}ms;">
+    <div class="glass-panel subject-card animate-slide-up"
+onclick = "app.ui.renderSubjectDetails('${subject.id}')"
+style = "--subject-color: ${subject.color}; animation-delay: ${index * 100}ms;" >
                 
                 <div class="subject-card-icon">
                     <i class="ph ph-${subject.icon}"></i>
@@ -1122,7 +1396,7 @@ class UI {
                     </div>
                 </div>
             </div>
-        `;
+    `;
     }
 
     renderSubjectDetails(subjectId) {
@@ -1135,7 +1409,7 @@ class UI {
         const files = this.store.getSubjectFiles(subjectId, this.activeSubjectTab);
 
         const content = `
-            <div class="subject-header animate-fade-in" style="margin-bottom: 2rem;">
+    <div class="subject-header animate-fade-in" style = "margin-bottom: 2rem;" >
                 <button class="btn-icon" onclick="app.ui.renderDashboard()" style="margin-bottom: 1rem;">
                     <i class="ph ph-arrow-left" style="font-size: 1.2rem;"></i> Back
                 </button>
@@ -1166,7 +1440,7 @@ class UI {
                 
                 ${this.renderSubjectFilesGrid(files, subject.color)}
             </div>
-        `;
+`;
 
         this.renderLayout('dashboard', subject.name, content);
     }
@@ -1179,19 +1453,19 @@ class UI {
     renderSubjectFilesGrid(files, color) {
         if (files.length === 0) {
             return `
-                <div class="glass-panel dashed" style="padding: 4rem; text-align: center;">
+    <div class="glass-panel dashed" style = "padding: 4rem; text-align: center;" >
                     <div class="folder-pulse">
                         <i class="ph ph-folder-notch-open" style="font-size: 4rem; color: var(--text-muted); opacity: 0.5;"></i>
                     </div>
                     <h3 style="margin-top: 1rem; color: var(--text-muted);">No content uploaded</h3>
                     <p style="color: var(--text-muted);">Upload your first file to get started.</p>
                 </div>
-            `;
+    `;
         }
 
         return `
-            <div class="files-grid">
-                 ${files.map(file => {
+    <div class="files-grid" >
+        ${files.map(file => {
             // Create Download Button Logic
             let downloadBtn = '';
             let previewBtn = '';
@@ -1240,9 +1514,10 @@ class UI {
                             ${downloadBtn}
                         </div>
                     </div>
-                `}).join('')}
+                `}).join('')
+            }
             </div>
-        `;
+    `;
     }
 
     // File Actions
@@ -1257,25 +1532,25 @@ class UI {
         if (file.isMock) {
             // Simulated Viewer for Mock Files
             const modalHtml = `
-                <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
-                    <div class="modal" style="width: 800px; height: 80vh; max-width: 95%;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
-                            <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="ph ph-file-${file.type}" style="color: var(--primary);"></i>
-                                ${file.name}
-                            </h3>
-                            <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
-                                <i class="ph ph-x"></i>
-                            </button>
-                        </div>
-                        <div style="height: calc(100% - 60px); background: var(--bg-main); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 2rem;">
-                            <i class="ph ph-file-${file.type}" style="font-size: 5rem; color: var(--text-muted); opacity: 0.3; margin-bottom: 1rem;"></i>
-                            <h2 style="color: var(--text-muted);">Preview Not Available</h2>
-                            <p style="color: var(--text-muted);">This is a demo file. In a real application, the document viewer would appear here.</p>
-                        </div>
-                    </div>
+    <div class="modal-overlay active" onclick = "if(event.target === this) this.remove()" >
+        <div class="modal" style="width: 800px; height: 80vh; max-width: 95%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ph ph-file-${file.type}" style="color: var(--primary);"></i>
+                    ${file.name}
+                </h3>
+                <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
+                    <i class="ph ph-x"></i>
+                </button>
+            </div>
+            <div style="height: calc(100% - 60px); background: var(--bg-main); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 2rem;">
+                <i class="ph ph-file-${file.type}" style="font-size: 5rem; color: var(--text-muted); opacity: 0.3; margin-bottom: 1rem;"></i>
+                <h2 style="color: var(--text-muted);">Preview Not Available</h2>
+                <p style="color: var(--text-muted);">This is a demo file. In a real application, the document viewer would appear here.</p>
+            </div>
+        </div>
                 </div>
-            `;
+    `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             return;
         }
@@ -1283,7 +1558,7 @@ class UI {
         const win = window.open();
         if (win) {
             win.document.write(
-                `<iframe src="${file.dataUrl}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`
+                `< iframe src = "${file.dataUrl}" frameborder = "0" style = "border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen ></iframe > `
             );
             win.document.close(); // Important for some browsers
         } else {
@@ -1328,86 +1603,58 @@ class UI {
     }
 
     renderTips() {
+        const tips = [
+            { icon: 'timer', color: '#ff7675', title: 'The Pomodoro Technique', text: 'Work for 25 minutes, then take a 5 minute break. After 4 cycles, take a longer break.' },
+            { icon: 'brain', color: '#74b9ff', title: 'Active Recall', text: 'Don\'t just re-read. Test yourself. Close the book and try to recite what you learned.' },
+            { icon: 'calendar-check', color: '#55efc4', title: 'Spaced Repetition', text: 'Review material at increasing intervals (1 day, 3 days, 1 week) to combat forgetting.' }
+        ];
+
+        let activeTip = 0;
+
         const content = `
-            <div class="animate-slide-up">
-                <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; text-align: center; background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(162, 155, 254, 0.1) 100%);">
-                    <i class="ph ph-lightbulb" style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;"></i>
-                    <h2 style="margin-bottom: 0.5rem;">Master Your Learning</h2>
-                    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">Discover scientifically proven techniques to study smarter, not harder.</p>
+     <div class="animate-slide-up" >
+                <div class="glass-panel" style="padding: 3rem; margin-bottom: 2rem; text-align: center; background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(162, 155, 254, 0.1) 100%); position: relative; overflow: hidden;">
+                    <i class="ph ph-lightbulb" style="font-size: 4rem; color: var(--accent); margin-bottom: 1rem; animation: float 3s ease-in-out infinite;"></i>
+                    <h2 style="margin-bottom: 0.5rem; font-family: var(--font-heading); font-size: 2rem;">Master Your Learning</h2>
+                    <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto; font-size: 1.1rem;">Discover scientifically proven techniques to study smarter, not harder.</p>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-                    <!-- Tip 1 -->
-                    <div class="glass-panel tip-card" style="border-top: 4px solid #ff7675;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 118, 117, 0.1); display: flex; align-items: center; justify-content: center;">
-                                <i class="ph ph-timer" style="color: #ff7675; font-size: 1.2rem;"></i>
+                <div class="tip-carousel-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    ${tips.map((tip, index) => `
+                        <div class="glass-panel tip-card" style="border-top: 4px solid ${tip.color}; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 15px 30px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--card-shadow)';">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                <div style="width: 50px; height: 50px; border-radius: 50%; background: ${tip.color}20; display: flex; align-items: center; justify-content: center;">
+                                    <i class="ph ph-${tip.icon}" style="color: ${tip.color}; font-size: 1.5rem;"></i>
+                                </div>
+                                <span class="badge" style="background: ${tip.color}20; color: ${tip.color};">Tip #${index + 1}</span>
                             </div>
-                            <span class="badge" style="background: rgba(255, 118, 117, 0.1); color: #ff7675;">Time Management</span>
+                            <h3 style="font-size: 1.3rem; margin-bottom: 0.5rem;">${tip.title}</h3>
+                            <p style="color: var(--text-muted); line-height: 1.6;">${tip.text}</p>
                         </div>
-                        <h3>The Pomodoro Technique</h3>
-                        <p style="color: var(--text-muted); margin: 0.5rem 0 1rem; font-size: 0.95rem;">
-                            Work for 25 minutes, then take a 5 minute break. After 4 cycles, take a longer break. This prevents burnout and keeps your mind fresh.
-                        </p>
-                        <button class="btn-xs" onclick="app.ui.renderDashboard()">Try Timer</button>
-                    </div>
-
-                    <!-- Tip 2 -->
-                    <div class="glass-panel tip-card" style="border-top: 4px solid #74b9ff;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(116, 185, 255, 0.1); display: flex; align-items: center; justify-content: center;">
-                                <i class="ph ph-brain" style="color: #74b9ff; font-size: 1.2rem;"></i>
-                            </div>
-                            <span class="badge" style="background: rgba(116, 185, 255, 0.1); color: #74b9ff;">Memory</span>
-                        </div>
-                        <h3>Active Recall</h3>
-                        <p style="color: var(--text-muted); margin: 0.5rem 0 1rem; font-size: 0.95rem;">
-                            Don't just re-read. Test yourself. Close the book and try to recite what you learned. This strengthens neural connections.
-                        </p>
-                    </div>
-
-                    <!-- Tip 3 -->
-                    <div class="glass-panel tip-card" style="border-top: 4px solid #55efc4;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                            <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(85, 239, 196, 0.1); display: flex; align-items: center; justify-content: center;">
-                                <i class="ph ph-calendar-check" style="color: #55efc4; font-size: 1.2rem;"></i>
-                            </div>
-                            <span class="badge" style="background: rgba(85, 239, 196, 0.1); color: #55efc4;">Retention</span>
-                        </div>
-                        <h3>Spaced Repetition</h3>
-                        <p style="color: var(--text-muted); margin: 0.5rem 0 1rem; font-size: 0.95rem;">
-                            Review material at increasing intervals (1 day, 3 days, 1 week). This combats the "forgetting curve" effectively.
-                        </p>
-                    </div>
+                    `).join('')}
                 </div>
                 
-                <div class="glass-panel" style="margin-top: 2rem; padding: 1.5rem;">
+                <div class="glass-panel" style="margin-top: 2rem; padding: 2rem;">
                     <h3><i class="ph ph-sliders"></i> Study Tips Settings</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">Manage how the study assistant interacts with your learning data.</p>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Manage how the study assistant interacts with your learning data.</p>
                     
                     <div class="settings-group">
                          <div class="settings-item">
                             <span>Personalized Recommendations</span>
-                            <div class="toggle-switch active">
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')">
                                 <div class="toggle-thumb"></div>
                             </div>
                         </div>
                         <div class="settings-item">
                             <span>Daily Tip Notification</span>
-                            <div class="toggle-switch">
-                                <div class="toggle-thumb"></div>
-                            </div>
-                        </div>
-                         <div class="settings-item">
-                            <span>Access to Grade History</span>
-                            <div class="toggle-switch active">
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')">
                                 <div class="toggle-thumb"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-         `;
+    `;
         this.renderLayout('tips', 'Study Tips', content);
     }
 
@@ -1433,11 +1680,11 @@ class UI {
         };
 
         const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
+        toast.className = `toast ${type} `;
         toast.innerHTML = `
-            <i class="ph ph-${icons[type]}" style="color: ${colors[type]}; font-size: 1.5rem;"></i>
-            <span style="font-weight: 500;">${message}</span>
-        `;
+    < i class="ph ph-${icons[type]}" style = "color: ${colors[type]}; font-size: 1.5rem;" ></i >
+        <span style="font-weight: 500;">${message}</span>
+`;
 
         container.appendChild(toast);
 
@@ -1452,34 +1699,34 @@ class UI {
         this.uploadContext = { subjectId, category };
 
         const modalHtml = `
-            <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
-                <div class="modal">
-                    <h3>Upload File ${category ? `to ${category}` : ''}</h3>
-                    <p style="color: var(--text-muted); margin-bottom: 1rem;">Drag and drop your files here or click to browse.</p>
-                    
-                    <div class="upload-drop-zone" id="drop-zone">
-                        <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem; opacity: 0.7;"></i>
-                        <p style="font-weight: 600;">Click to upload or drag & drop</p>
-                        <p style="font-size: 0.8rem; color: var(--text-muted);">PDF, DOCX, XLS or Images (max 2MB)</p>
-                        <input type="file" id="file-upload-input" hidden>
-                    </div>
+    <div class="modal-overlay active" onclick = "if(event.target === this) this.remove()" >
+        <div class="modal">
+            <h3>Upload File ${category ? `to ${category}` : ''}</h3>
+            <p style="color: var(--text-muted); margin-bottom: 1rem;">Drag and drop your files here or click to browse.</p>
 
-                    <div id="selected-file-display" style="display: none;"></div>
-
-                    <div class="progress-container" style="margin-bottom: 1rem; display: none;" id="upload-progress-container">
-                         <div class="progress-bar" style="width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
-                            <div class="progress-bar-fill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.2s;"></div>
-                        </div>
-                        <span class="progress-percent" style="font-size: 0.8rem; float: right; margin-top: 0.2rem;">0%</span>
-                    </div>
-
-                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-                        <button class="btn" onclick="document.querySelector('.modal-overlay').remove()">Cancel</button>
-                        <button class="btn btn-primary" id="upload-btn" disabled style="opacity: 0.6; cursor: not-allowed;">Upload</button>
-                    </div>
-                </div>
+            <div class="upload-drop-zone" id="drop-zone">
+                <i class="ph ph-cloud-arrow-up" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem; opacity: 0.7;"></i>
+                <p style="font-weight: 600;">Click to upload or drag & drop</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">PDF, DOCX, XLS or Images (max 2MB)</p>
+                <input type="file" id="file-upload-input" hidden>
             </div>
-        `;
+
+            <div id="selected-file-display" style="display: none;"></div>
+
+            <div class="progress-container" style="margin-bottom: 1rem; display: none;" id="upload-progress-container">
+                <div class="progress-bar" style="width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden;">
+                    <div class="progress-bar-fill" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.2s;"></div>
+                </div>
+                <span class="progress-percent" style="font-size: 0.8rem; float: right; margin-top: 0.2rem;">0%</span>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn" onclick="document.querySelector('.modal-overlay').remove()">Cancel</button>
+                <button class="btn btn-primary" id="upload-btn" disabled style="opacity: 0.6; cursor: not-allowed;">Upload</button>
+            </div>
+        </div>
+            </div>
+    `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
 
         const dropZone = document.getElementById('drop-zone');
@@ -1534,7 +1781,7 @@ class UI {
             const size = (selectedFile.size / 1024 / 1024).toFixed(2) + ' MB';
             fileDisplay.style.display = 'block';
             fileDisplay.innerHTML = `
-                <div class="upload-selected-file">
+    <div class="upload-selected-file" >
                     <i class="ph ph-file-text" style="font-size: 1.5rem; color: var(--primary);"></i>
                     <div style="flex-grow: 1;">
                         <div style="font-weight: 600; font-size: 0.9rem;">${selectedFile.name}</div>
@@ -1542,7 +1789,7 @@ class UI {
                     </div>
                     <i class="ph ph-check-circle" style="color: #2ed573;"></i>
                 </div>
-            `;
+    `;
             // Hide drop zone instruction to save space or keep it, user choice. hiding for cleaner look
             dropZone.style.display = 'none';
         }
@@ -1650,5 +1897,67 @@ class UI {
         });
 
         // Add hover effect for icons via JS delegate (optional, but css is better)
+
+
+    }
+
+    renderWelcome() {
+        // Welcome / Landing Screen
+        this.appContainer.innerHTML = `
+    <div style = "min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; background: var(--bg-main);" >
+                
+                <div class="animate-slide-up" style="margin-bottom: 2rem;">
+                    <div style="font-family: var(--font-heading); font-weight: 800; font-size: 4rem; color: var(--text-main); margin-bottom: 0.5rem;">
+                        StudySpace<span style="color: var(--primary);">.</span>
+                    </div>
+                    <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; line-height: 1.6;">
+                        Your all-in-one platform to organize, study, and achieve your academic goals.
+                        <br>Designed for efficiency, focused on your success.
+                    </p>
+                </div>
+
+                <div class="animate-slide-up" style="animation-delay: 0.2s;">
+                    <button class="btn btn-primary" onclick="app.ui.renderDashboard()" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
+                        Get Started <i class="ph ph-arrow-right"></i>
+                    </button>
+                    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">
+                        Made Khalil ❤️ Welcome students
+                    </p>
+                </div>
+
+                <!--Abstract decorations-->
+                <div style="position: absolute; top: 10%; left: 10%; width: 300px; height: 300px; background: var(--primary); opacity: 0.05; filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
+                <div style="position: absolute; bottom: 10%; right: 10%; width: 250px; height: 250px; background: var(--secondary); opacity: 0.05; filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
+            </div>
+    `;
+    }
+    triggerConfetti() {
+        const colors = ['#6c5ce7', '#00cec9', '#fdcb6e', '#ff7675', '#a29bfe'];
+
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.left = Math.random() * window.innerWidth + 'px';
+            confetti.style.top = '-10px';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.borderRadius = '50%';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.zIndex = '9999';
+            confetti.style.transition = 'all 3s ease-out';
+
+            document.body.appendChild(confetti);
+
+            setTimeout(() => {
+                confetti.style.top = window.innerHeight + 'px';
+                confetti.style.transform = `rotate(${Math.random() * 360}deg) translateX(${Math.random() * 50 - 25}px)`;
+                confetti.style.opacity = '0';
+            }, 100);
+
+            setTimeout(() => {
+                confetti.remove();
+            }, 3000);
+        }
     }
 }
