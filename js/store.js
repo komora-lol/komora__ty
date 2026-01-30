@@ -244,6 +244,16 @@ class Store {
         this.save();
     }
 
+    incrementStats(key, value = 1) {
+        if (!this.user.stats) {
+            this.user.stats = { streak: 0, hoursStudied: 0, assignmentsDone: 0 };
+        }
+        if (typeof this.user.stats[key] !== 'undefined') {
+            this.user.stats[key] += value;
+            this.save();
+        }
+    }
+
     getDailyGoals() {
         return this.dailyGoals || [];
     }

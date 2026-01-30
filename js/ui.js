@@ -347,6 +347,8 @@ class UI {
         const goal = this.store.getDailyGoals().find(g => g.id === id);
         if (goal && goal.done) {
             this.triggerConfetti();
+            this.store.incrementStats('assignmentsDone', 1);
+            this.showToast("Great job! Stats updated.", "success");
         }
         this.renderDashboard();
     }
@@ -1529,41 +1531,47 @@ style = "--subject-color: ${subject.color}; animation-delay: ${index * 100}ms;" 
             return;
         }
 
-        if (file.isMock) {
-            // Simulated Viewer for Mock Files
+        // Handle Image Previews
+        if (file.type === 'image' || file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) || (file.dataUrl && file.dataUrl.startsWith('data:image'))) {
             const modalHtml = `
-    <div class="modal-overlay active" onclick = "if(event.target === this) this.remove()" >
-        <div class="modal" style="width: 800px; height: 80vh; max-width: 95%;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
-                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="ph ph-file-${file.type}" style="color: var(--primary);"></i>
-                    ${file.name}
-                </h3>
-                <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
-                    <i class="ph ph-x"></i>
-                </button>
-            </div>
-            <div style="height: calc(100% - 60px); background: var(--bg-main); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; padding: 2rem;">
-                <i class="ph ph-file-${file.type}" style="font-size: 5rem; color: var(--text-muted); opacity: 0.3; margin-bottom: 1rem;"></i>
-                <h2 style="color: var(--text-muted);">Preview Not Available</h2>
-                <p style="color: var(--text-muted);">This is a demo file. In a real application, the document viewer would appear here.</p>
-            </div>
-        </div>
+                <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
+                    <div class="modal" style="width: 80vh; height: 80vh; max-width: 95%; background: transparent; box-shadow: none; display: flex; align-items: center; justify-content: center;">
+                        <img src="${file.dataUrl}" style="max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: white;">
+                            <i class="ph ph-x"></i>
+                        </button>
+                    </div>
                 </div>
-    `;
+            `;
             document.body.insertAdjacentHTML('beforeend', modalHtml);
             return;
         }
 
-        const win = window.open();
-        if (win) {
-            win.document.write(
-                `< iframe src = "${file.dataUrl}" frameborder = "0" style = "border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen ></iframe > `
-            );
-            win.document.close(); // Important for some browsers
-        } else {
-            this.showToast("Pop-up blocked! Please allow pop-ups.", "error");
-        }
+        // Handle Other Documents (PDF, Text, etc.) - Try to open in Iframe Modal
+        const modalHtml = `
+            <div class="modal-overlay active" onclick="if(event.target === this) this.remove()">
+                <div class="modal" style="width: 90vw; height: 90vh; max-width: 1200px; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="ph ph-file-text" style="color: var(--primary);"></i>
+                            ${file.name}
+                        </h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                             <button class="btn-sm" onclick="app.ui.triggerDownload('${file.id}')">
+                                <i class="ph ph-download-simple"></i> Download
+                            </button>
+                            <button class="btn-icon" onclick="this.closest('.modal-overlay').remove()">
+                                <i class="ph ph-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="flex-grow: 1; background: var(--bg-main); border-radius: 8px; overflow: hidden; position: relative;">
+                        <iframe src="${file.dataUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
     }
 
     renameFile(id) {
