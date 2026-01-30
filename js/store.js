@@ -62,6 +62,30 @@ class Store {
                 this.recentFiles = this.recentFiles.filter(f => !f.isMock);
                 this.save();
             }
+
+            // Migration: Logic to "Start Fresh" for the user request
+            if (!this.migrations || !this.migrations.includes('reset_v2')) {
+                this.user.stats = { streak: 0, hoursStudied: 0, assignmentsDone: 0 };
+
+                // Reset subject progress
+                if (this.subjects) {
+                    this.subjects.forEach(s => s.progress = 0);
+                }
+
+                // Update prayers to El Jadida times
+                this.prayers = [
+                    { id: 'fajr', name: 'الفجر', time: '06:58', completed: false },
+                    { id: 'sobhe', name: 'الصبح', time: '08:26', completed: false },
+                    { id: 'dhuhr', name: 'الظهر', time: '13:43', completed: false },
+                    { id: 'asr', name: 'العصر', time: '16:36', completed: false },
+                    { id: 'maghrib', name: 'المغرب', time: '19:11', completed: false },
+                    { id: 'isha', name: 'العشاء', time: '20:35', completed: false }
+                ];
+
+                this.migrations = this.migrations || [];
+                this.migrations.push('reset_v2');
+                this.save();
+            }
         } else {
             this.initDefaults();
         }
@@ -85,21 +109,21 @@ class Store {
             gender: "male",
             avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=Felix",
             stats: {
-                streak: 12,
-                hoursStudied: 45,
-                assignmentsDone: 28
+                streak: 0,
+                hoursStudied: 0,
+                assignmentsDone: 0
             }
         };
 
         this.lastLoginDate = new Date().toDateString();
 
         this.prayers = [
-            { id: 'fajr', name: 'الفجر', time: '05:30', completed: false },
-            { id: 'sobhe', name: 'الصبح', time: '8:32 am', completed: false },
-            { id: 'dhuhr', name: 'الظهر', time: '12:30', completed: false },
-            { id: 'asr', name: 'العصر', time: '15:45', completed: false },
-            { id: 'maghrib', name: 'المغرب', time: '18:15', completed: false },
-            { id: 'isha', name: 'العشاء', time: '19:45', completed: false }
+            { id: 'fajr', name: 'الفجر', time: '06:58', completed: false },
+            { id: 'sobhe', name: 'الصبح', time: '08:26', completed: false },
+            { id: 'dhuhr', name: 'الظهر', time: '13:43', completed: false },
+            { id: 'asr', name: 'العصر', time: '16:36', completed: false },
+            { id: 'maghrib', name: 'المغرب', time: '19:11', completed: false },
+            { id: 'isha', name: 'العشاء', time: '20:35', completed: false }
         ];
 
         this.dailySports = [
@@ -119,14 +143,14 @@ class Store {
         };
 
         this.subjects = [
-            { id: "math", name: "Mathematics", icon: "function", color: "#e17055", progress: 78 },
-            { id: "pc", name: "Physics & Chemistry", icon: "atom", color: "#0984e3", progress: 65 },
-            { id: "svt", name: "Life & Earth Sciences", icon: "dna", color: "#00b894", progress: 42 },
-            { id: "eng", name: "English", icon: "chat-circle-text", color: "#fdcb6e", progress: 85 },
-            { id: "phi", name: "Philosophy", icon: "brain", color: "#6c5ce7", progress: 30 },
-            { id: "ei", name: "Islamic Education", icon: "book-open-text", color: "#2d3436", progress: 90 },
-            { id: "ar", name: "Arabic", icon: "pen-nib", color: "#d63031", progress: 50 },
-            { id: "hg", name: "History & Geography", icon: "globe-hemisphere-west", color: "#e84393", progress: 60 }
+            { id: "math", name: "Mathematics", icon: "function", color: "#e17055", progress: 0 },
+            { id: "pc", name: "Physics & Chemistry", icon: "atom", color: "#0984e3", progress: 0 },
+            { id: "svt", name: "Life & Earth Sciences", icon: "dna", color: "#00b894", progress: 0 },
+            { id: "eng", name: "English", icon: "chat-circle-text", color: "#fdcb6e", progress: 0 },
+            { id: "phi", name: "Philosophy", icon: "brain", color: "#6c5ce7", progress: 0 },
+            { id: "ei", name: "Islamic Education", icon: "book-open-text", color: "#2d3436", progress: 0 },
+            { id: "ar", name: "Arabic", icon: "pen-nib", color: "#d63031", progress: 0 },
+            { id: "hg", name: "History & Geography", icon: "globe-hemisphere-west", color: "#e84393", progress: 0 }
         ];
 
         // Interactive Calendar Events
